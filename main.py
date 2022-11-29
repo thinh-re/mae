@@ -1,7 +1,8 @@
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, OrderedDict
 from models_mae import mae_vit_large_patch16
 from pprint import pprint
 import torch
+from torch import Tensor
 
 model = mae_vit_large_patch16()
 
@@ -10,24 +11,17 @@ model.load_state_dict(checkpoint['model'], strict=False)
 
 keys = list(model.state_dict().keys())
 
-selected_keys: List[Tuple[str, str]] = []
-# selected_state_dict: Dict[str, Any] = {}
-# model.state_dict()
-
-for key in keys:
+state_dict: OrderedDict[str, Tensor] = model.state_dict()
+selected_state_dict = OrderedDict()
+for key, value in state_dict.items():
     if key.startswith('blocks.'):
-        selected_keys.append((key, key.replace('blocks.', 'encoder.')))
+        selected_state_dict[key.replace('blocks.', 'encoder.')] = value
     if key == 'cls_token':
-        selected_keys.append((key, 'global_tokens'))
+        selected_state_dict['global_tokens'] = value
     if key.startswith('patch_embed.'):
-        selected_keys.append((key, key.replace('patch_embed.', 'input_adapters.rgb.')))
+        selected_state_dict[key.replace('patch_embed.', 'input_adapters.rgb.')] = value
         
-for (key, mapping_key) in selected_keys:
-    torch.save()
+torch.save(OrderedDict(model=selected_state_dict), 'pretrained_weights/selected_mae_pretrain_vit_large.pth')
 
 with open('key.txt', 'w') as f:
     f.write('\n'.join(keys))
-    
-pprint(selected_keys)
-
-# print(model)
