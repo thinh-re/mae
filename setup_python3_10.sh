@@ -6,4 +6,4 @@ python3.10 --version
 python3.10 -m venv env
 ./env/bin/pip install --upgrade pip setuptools wheel
 ./env/bin/pip install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu116
-./env/bin/pip install -r requirements/train.txt
+./env/bin/pip install -r requirements.txt
