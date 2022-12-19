@@ -149,7 +149,6 @@ def main(args):
     else:
         log_writer = None
 
-    print('data_loader')
     data_loader_train = DataLoader(
         dataset_train, sampler=sampler_train,
         batch_size=args.batch_size,
@@ -158,14 +157,13 @@ def main(args):
         drop_last=True,
     )
     
-    print('model')
     # define the model
     model = models_mae.__dict__[args.model](norm_pix_loss=args.norm_pix_loss)
 
     model.to(device)
 
     model_without_ddp = model
-    print("Model = %s" % str(model_without_ddp))
+    # print("Model = %s" % str(model_without_ddp))
 
     eff_batch_size = args.batch_size * args.accum_iter * misc.get_world_size()
     
