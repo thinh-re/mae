@@ -22,6 +22,8 @@ from torch.utils.tensorboard import SummaryWriter
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 
+from torch.utils.data import DataLoader, DistributedSampler, RandomSampler
+
 import timm
 
 assert timm.__version__ == "0.3.2"  # version check
@@ -131,12 +133,12 @@ def main(args):
     if True:  # args.distributed:
         num_tasks = misc.get_world_size()
         global_rank = misc.get_rank()
-        sampler_train = torch.utils.data.DistributedSampler(
+        sampler_train = DistributedSampler(
             dataset_train, num_replicas=num_tasks, rank=global_rank, shuffle=True
         )
         print("Sampler_train = %s" % str(sampler_train))
     else:
-        sampler_train = torch.utils.data.RandomSampler(dataset_train)
+        sampler_train = RandomSampler(dataset_train)
 
     if global_rank == 0 and args.log_dir is not None:
         os.makedirs(args.log_dir, exist_ok=True)
@@ -144,7 +146,7 @@ def main(args):
     else:
         log_writer = None
 
-    data_loader_train = torch.utils.data.DataLoader(
+    data_loader_train = DataLoader(
         dataset_train, sampler=sampler_train,
         batch_size=args.batch_size,
         num_workers=args.num_workers,
