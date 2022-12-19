@@ -1,2 +1,3 @@
 torch
-timm==0.3.2
+timm
+tensorboard
