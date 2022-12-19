@@ -74,7 +74,9 @@ def get_args_parser():
                         help='epochs to warmup LR')
 
     # Dataset parameters
-    parser.add_argument('--data_path', default='/kaggle/input/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC/', type=str,
+    # parser.add_argument('--data_path', default='/kaggle/input/imagenet-object-localization-challenge/ILSVRC/Data/CLS-LOC/', type=str,
+    #                     help='dataset path')
+    parser.add_argument('--data_path', default='/kaggle/input/rgbdsod-set4/train/RGB', type=str,
                         help='dataset path')
 
     parser.add_argument('--output_dir', default='./output_dir',
@@ -127,7 +129,8 @@ def main(args):
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-    dataset_train = datasets.ImageFolder(os.path.join(args.data_path, 'train'), transform=transform_train)
+    # dataset_train = datasets.ImageFolder(os.path.join(args.data_path, 'train'), transform=transform_train)
+    dataset_train = datasets.ImageFolder(args.data_path, transform=transform_train)
     print(dataset_train)
 
     if True:  # args.distributed:
