@@ -2,3 +2,4 @@ torch
 timm==0.6.12
 tensorboard
 typed-argument-parser
+wandb

@@ -336,7 +336,7 @@ def load_model(args, model_without_ddp, optimizer, loss_scaler):
             print("With optim & sched!")
 
 
-def all_reduce_mean(x):
+def all_reduce_mean(x: float) -> float:
     world_size = get_world_size()
     if world_size > 1:
         x_reduce = torch.tensor(x).cuda()

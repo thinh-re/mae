@@ -33,7 +33,7 @@ def train_one_epoch(
     optimizer.zero_grad()
 
     if log_writer is not None:
-        print('log_dir: {}'.format(log_writer.log_dir))
+        print(f'log_dir: {log_writer.log_dir}')
 
     for data_iter_step, (samples, _) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
 
@@ -41,7 +41,7 @@ def train_one_epoch(
         if data_iter_step % accum_iter == 0:
             lr_sched.adjust_learning_rate(optimizer, data_iter_step / len(data_loader) + epoch, args)
 
-        samples = samples.to(device, non_blocking=True)
+        samples: Tensor = samples.to(device, non_blocking=True)
 
         with torch.cuda.amp.autocast():
             rs = model(samples, mask_ratio=args.mask_ratio)
@@ -50,12 +50,14 @@ def train_one_epoch(
         loss_value: float = loss.item()
 
         if not math.isfinite(loss_value):
-            print("Loss is {}, stopping training".format(loss_value))
+            print(f"Loss is {loss_value}, stopping training")
             sys.exit(1)
 
         loss /= accum_iter
-        loss_scaler(loss, optimizer, parameters=model.parameters(),
-                    update_grad=(data_iter_step + 1) % accum_iter == 0)
+        loss_scaler(
+            loss, optimizer, parameters=model.parameters(),
+            update_grad=(data_iter_step + 1) % accum_iter == 0
+        )
         if (data_iter_step + 1) % accum_iter == 0:
             optimizer.zero_grad()
 
@@ -74,7 +76,6 @@ def train_one_epoch(
             epoch_1000x = int((data_iter_step / len(data_loader) + epoch) * 1000)
             log_writer.add_scalar('train_loss', loss_value_reduce, epoch_1000x)
             log_writer.add_scalar('lr', lr, epoch_1000x)
-
 
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
