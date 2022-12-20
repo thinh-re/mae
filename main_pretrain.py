@@ -115,7 +115,7 @@ def main(args: PreTrainArgumentParser):
     )
     
     wandb_login()
-    wandb_config = args.__dict__()
+    wandb_config = args.__dict__
     wandb_config['base_lr'] = base_lr
     wandb_init('test', wandb_config)
 

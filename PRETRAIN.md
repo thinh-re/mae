@@ -4,7 +4,7 @@ To pre-train ViT-Large (recommended default) with **multi-node distributed train
 
 ```
 torchrun --nnodes=1 --nproc_per_node=1 main_pretrain.py \
-    --batch_size 64 \
+    --batch_size 10 \
     --model mae_vit_base_patch16 \
     --norm_pix_loss True \
     --mask_ratio 0.75 \

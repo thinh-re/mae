@@ -19,7 +19,7 @@ from typing import Optional
 
 import torch
 import torch.distributed as dist
-from argparsers import PreTrainArgumentParser
+from .argparsers import PreTrainArgumentParser
 from torch import Tensor
 from torch._six import inf
 from torch.distributed import barrier, init_process_group
