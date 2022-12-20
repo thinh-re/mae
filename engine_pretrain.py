@@ -1,28 +1,27 @@
-# Copyright (c) Meta Platforms, Inc. and affiliates.
-# All rights reserved.
-
-# This source code is licensed under the license found in the
-# LICENSE file in the root directory of this source tree.
-# --------------------------------------------------------
-# References:
-# DeiT: https://github.com/facebookresearch/deit
-# BEiT: https://github.com/microsoft/unilm/tree/master/beit
-# --------------------------------------------------------
 import math
 import sys
-from typing import Iterable
+from typing import Iterable, Optional
 
 import torch
+from torch import Tensor
 
+from torch.utils.tensorboard import SummaryWriter
 import util.misc as misc
 import util.lr_sched as lr_sched
 
+from util.argparsers import PreTrainArgumentParser
+from util.misc import NativeScalerWithGradNormCount as NativeScaler
 
-def train_one_epoch(model: torch.nn.Module,
-                    data_loader: Iterable, optimizer: torch.optim.Optimizer,
-                    device: torch.device, epoch: int, loss_scaler,
-                    log_writer=None,
-                    args=None):
+def train_one_epoch(
+    model: torch.nn.Module,
+    data_loader: Iterable, 
+    optimizer: torch.optim.Optimizer,
+    device: torch.device, 
+    epoch: int, 
+    loss_scaler: NativeScaler,
+    log_writer: Optional[SummaryWriter] = None,
+    args: Optional[PreTrainArgumentParser] = None,
+):
     model.train(True)
     metric_logger = misc.MetricLogger(delimiter="  ")
     metric_logger.add_meter('lr', misc.SmoothedValue(window_size=1, fmt='{value:.6f}'))
@@ -45,9 +44,10 @@ def train_one_epoch(model: torch.nn.Module,
         samples = samples.to(device, non_blocking=True)
 
         with torch.cuda.amp.autocast():
-            loss, _, _ = model(samples, mask_ratio=args.mask_ratio)
+            rs = model(samples, mask_ratio=args.mask_ratio)
+            loss: Tensor = rs[0]
 
-        loss_value = loss.item()
+        loss_value: float = loss.item()
 
         if not math.isfinite(loss_value):
             print("Loss is {}, stopping training".format(loss_value))

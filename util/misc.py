@@ -15,10 +15,14 @@ import os
 import time
 from collections import defaultdict, deque
 from pathlib import Path
+from typing import Optional
 
 import torch
 import torch.distributed as dist
+from argparsers import PreTrainArgumentParser
+from torch import Tensor
 from torch._six import inf
+from torch.distributed import barrier, init_process_group
 
 
 class SmoothedValue(object):
@@ -26,7 +30,7 @@ class SmoothedValue(object):
     window or the global series average.
     """
 
-    def __init__(self, window_size=20, fmt=None):
+    def __init__(self, window_size: int = 20, fmt: Optional[str] = None):
         if fmt is None:
             fmt = "{median:.4f} ({global_avg:.4f})"
         self.deque = deque(maxlen=window_size)
@@ -34,7 +38,7 @@ class SmoothedValue(object):
         self.count = 0
         self.fmt = fmt
 
-    def update(self, value, n=1):
+    def update(self, value: float, n: int = 1):
         self.deque.append(value)
         self.count += n
         self.total += value * n
@@ -212,8 +216,7 @@ def save_on_master(*args, **kwargs):
     if is_main_process():
         torch.save(*args, **kwargs)
 
-
-def init_distributed_mode(args):
+def init_distributed_mode(args: PreTrainArgumentParser):
     if args.dist_on_itp:
         args.rank = int(os.environ['OMPI_COMM_WORLD_RANK'])
         args.world_size = int(os.environ['OMPI_COMM_WORLD_SIZE'])
@@ -242,9 +245,13 @@ def init_distributed_mode(args):
     args.dist_backend = 'nccl'
     print('| distributed init (rank {}): {}, gpu {}'.format(
         args.rank, args.dist_url, args.gpu), flush=True)
-    torch.distributed.init_process_group(backend=args.dist_backend, init_method=args.dist_url,
-                                         world_size=args.world_size, rank=args.rank)
-    torch.distributed.barrier()
+    init_process_group(
+        backend=args.dist_backend, 
+        init_method=args.dist_url,
+        world_size=args.world_size, 
+        rank=args.rank,
+    )
+    barrier()
     setup_for_distributed(args.rank == 0)
 
 
@@ -254,7 +261,7 @@ class NativeScalerWithGradNormCount:
     def __init__(self):
         self._scaler = torch.cuda.amp.GradScaler()
 
-    def __call__(self, loss, optimizer, clip_grad=None, parameters=None, create_graph=False, update_grad=True):
+    def __call__(self, loss: Tensor, optimizer, clip_grad=None, parameters=None, create_graph=False, update_grad=True):
         self._scaler.scale(loss).backward(create_graph=create_graph)
         if update_grad:
             if clip_grad is not None:
