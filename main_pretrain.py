@@ -9,7 +9,6 @@
 # BEiT: https://github.com/microsoft/unilm/tree/master/beit
 # --------------------------------------------------------
 import datetime
-import json
 import os
 import time
 from pathlib import Path
@@ -28,6 +27,7 @@ import util.misc as misc
 from engine_pretrain import train_one_epoch
 from util.argparsers import PreTrainArgumentParser
 from util.misc import NativeScalerWithGradNormCount as NativeScaler
+from wandb_manager import wandb_init, wandb_login
 
 
 def main(args: PreTrainArgumentParser):
@@ -93,8 +93,9 @@ def main(args: PreTrainArgumentParser):
     if args.lr is None:  # only base_lr is specified
         args.lr = args.blr * eff_batch_size / 256
 
-    print("base lr: %.2e" % (args.lr * 256 / eff_batch_size))
-    print("actual lr: %.2e" % args.lr)
+    base_lr = args.lr * 256 / eff_batch_size
+    print(f"base lr: {base_lr:.2f}")
+    print(f"actual lr: {args.lr:.2f}")
 
     print("accumulate grad iterations: %d" % args.accum_iter)
     print("effective batch size: %d" % eff_batch_size)
@@ -106,21 +107,26 @@ def main(args: PreTrainArgumentParser):
     # following timm: set wd as 0 for bias and norm layers
     param_groups = optim_factory.param_groups_weight_decay(model_without_ddp, args.weight_decay)
     optimizer = torch.optim.AdamW(param_groups, lr=args.lr, betas=(0.9, 0.95))
-    print(optimizer)
     loss_scaler = NativeScaler()
 
-    misc.load_model(args=args, model_without_ddp=model_without_ddp, optimizer=optimizer, loss_scaler=loss_scaler)
+    misc.load_model(
+        args=args, model_without_ddp=model_without_ddp, 
+        optimizer=optimizer, loss_scaler=loss_scaler,
+    )
+    
+    wandb_login()
+    wandb_config = args.__dict__()
+    wandb_config['base_lr'] = base_lr
+    wandb_init('test', wandb_config)
 
     print(f"Start training for {args.epochs} epochs")
     start_time = time.time()
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             data_loader_train.sampler.set_epoch(epoch)
-        train_stats = train_one_epoch(
-            model, data_loader_train,
-            optimizer, device, epoch, loss_scaler,
-            log_writer=log_writer,
-            args=args
+        train_one_epoch(
+            model, data_loader_train, optimizer, 
+            device, epoch, loss_scaler, args=args,
         )
         if args.output_dir and (epoch % 20 == 0 or epoch + 1 == args.epochs):
             misc.save_model(
@@ -142,7 +148,7 @@ def main(args: PreTrainArgumentParser):
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
-    print('Training time {}'.format(total_time_str))
+    print(f'Training time {total_time_str}')
 
 
 if __name__ == '__main__':

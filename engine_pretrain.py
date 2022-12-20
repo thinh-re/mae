@@ -3,14 +3,15 @@ import sys
 from typing import Iterable, Optional
 
 import torch
+import wandb
 from torch import Tensor
-
 from torch.utils.tensorboard import SummaryWriter
-import util.misc as misc
-import util.lr_sched as lr_sched
 
+import util.lr_sched as lr_sched
+import util.misc as misc
 from util.argparsers import PreTrainArgumentParser
 from util.misc import NativeScalerWithGradNormCount as NativeScaler
+
 
 def train_one_epoch(
     model: torch.nn.Module,
@@ -19,7 +20,6 @@ def train_one_epoch(
     device: torch.device, 
     epoch: int, 
     loss_scaler: NativeScaler,
-    log_writer: Optional[SummaryWriter] = None,
     args: Optional[PreTrainArgumentParser] = None,
 ):
     model.train(True)
@@ -31,9 +31,6 @@ def train_one_epoch(
     accum_iter = args.accum_iter
 
     optimizer.zero_grad()
-
-    if log_writer is not None:
-        print(f'log_dir: {log_writer.log_dir}')
 
     for data_iter_step, (samples, _) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
 
@@ -69,13 +66,15 @@ def train_one_epoch(
         metric_logger.update(lr=lr)
 
         loss_value_reduce = misc.all_reduce_mean(loss_value)
-        if log_writer is not None and (data_iter_step + 1) % accum_iter == 0:
+        if (data_iter_step + 1) % accum_iter == 0:
             """ We use epoch_1000x as the x-axis in tensorboard.
             This calibrates different curves when batch size changes.
             """
             epoch_1000x = int((data_iter_step / len(data_loader) + epoch) * 1000)
-            log_writer.add_scalar('train_loss', loss_value_reduce, epoch_1000x)
-            log_writer.add_scalar('lr', lr, epoch_1000x)
+            wandb.log({
+                'train_loss': loss_value_reduce,
+                'lr': lr,
+            }, step=epoch_1000x)
 
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
