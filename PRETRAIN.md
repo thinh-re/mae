@@ -11,7 +11,7 @@ torchrun --nnodes=1 --nproc_per_node=1 main_pretrain.py \
     --epochs 800 \
     --warmup_epochs 40 \
     --blr 1.5e-4 --weight_decay 0.05 \
-    --data_path 
+    --data_path ./data
 ```
 
 ```
