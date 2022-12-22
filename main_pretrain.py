@@ -123,7 +123,7 @@ def main(args: PreTrainArgumentParser):
         wandb_login()
         wandb_config = args.__dict__
         wandb_config['base_lr'] = base_lr
-        wandb_init('test', wandb_config)
+        wandb_init(args.name, wandb_config)
         
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
