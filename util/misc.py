@@ -20,9 +20,11 @@ from typing import Optional
 import torch
 import torch.distributed as dist
 from argparsers import PreTrainArgumentParser
-from torch import Tensor
+from torch import Tensor, nn
 from torch._six import inf
 from torch.distributed import barrier, init_process_group
+from torch.nn.parallel import DistributedDataParallel
+from torch.optim.optimizer import Optimizer
 
 
 class SmoothedValue(object):
@@ -299,7 +301,14 @@ def get_grad_norm_(parameters, norm_type: float = 2.0) -> torch.Tensor:
     return total_norm
 
 
-def save_model(args, epoch, model, model_without_ddp, optimizer, loss_scaler):
+def save_model(
+    args: PreTrainArgumentParser, 
+    epoch: int, 
+    model: DistributedDataParallel, 
+    model_without_ddp: nn.Module, 
+    optimizer: Optimizer, 
+    loss_scaler: NativeScalerWithGradNormCount,
+):
     output_dir = Path(args.output_dir)
     epoch_name = str(epoch)
     if loss_scaler is not None:
@@ -312,14 +321,18 @@ def save_model(args, epoch, model, model_without_ddp, optimizer, loss_scaler):
                 'scaler': loss_scaler.state_dict(),
                 'args': args,
             }
-
             save_on_master(to_save, checkpoint_path)
     else:
         client_state = {'epoch': epoch}
         model.save_checkpoint(save_dir=args.output_dir, tag="checkpoint-%s" % epoch_name, client_state=client_state)
 
 
-def load_model(args, model_without_ddp, optimizer, loss_scaler):
+def load_model(
+    args: PreTrainArgumentParser, 
+    model_without_ddp: nn.Module, 
+    optimizer: Optimizer, 
+    loss_scaler: NativeScalerWithGradNormCount,
+):
     if args.resume:
         if args.resume.startswith('https'):
             checkpoint = torch.hub.load_state_dict_from_url(

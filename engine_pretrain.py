@@ -13,6 +13,7 @@ from util.argparsers import PreTrainArgumentParser
 from util.misc import NativeScalerWithGradNormCount as NativeScaler
 
 def train_one_epoch(
+    global_rank: int,
     model: torch.nn.Module,
     data_loader: Iterable, 
     optimizer: torch.optim.Optimizer,
@@ -32,7 +33,7 @@ def train_one_epoch(
 
     optimizer.zero_grad()
 
-    if log_writer is not None:
+    if global_rank == 0 and log_writer is not None:
         print(f'log_dir: {log_writer.log_dir}')
 
     for data_iter_step, (samples, _) in enumerate(metric_logger.log_every(data_loader, print_freq, header)):
@@ -69,7 +70,7 @@ def train_one_epoch(
         metric_logger.update(lr=lr)
 
         loss_value_reduce = misc.all_reduce_mean(loss_value)
-        if log_writer is not None and (data_iter_step + 1) % accum_iter == 0:
+        if global_rank == 0 and log_writer is not None and (data_iter_step + 1) % accum_iter == 0:
             """ We use epoch_1000x as the x-axis in tensorboard.
             This calibrates different curves when batch size changes.
             """
@@ -79,5 +80,5 @@ def train_one_epoch(
 
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
-    print("Averaged stats:", metric_logger)
-    return {k: meter.global_avg for k, meter in metric_logger.meters.items()}
+    if global_rank == 0:
+        print("Averaged stats:", metric_logger)
