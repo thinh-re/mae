@@ -2,7 +2,9 @@
 
 This is an example of training MAE in Kaggle
 
-[Masked Autoencoders Are Scalable Vision Learners](https://arxiv.org/abs/2111.06377)
+## Acknowledgement
+
+This repository is inspired by [MAE](https://github.com/facebookresearch/mae) (Original paper [Masked Autoencoders Are Scalable Vision Learners](https://arxiv.org/abs/2111.06377) )
 
 ```bash
 @Article{MaskedAutoencoders2021,
