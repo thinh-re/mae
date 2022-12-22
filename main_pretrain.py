@@ -121,8 +121,10 @@ def main(args: PreTrainArgumentParser):
         start_time = time.time()
         
         wandb_login()
-        wandb_config = args.__dict__
-        wandb_config['base_lr'] = base_lr
+        wandb_config = dict(base_lr=base_lr)
+        for key, value in args.__dict__.items():
+            if not key.startswith('_'):
+                wandb_config[key] = value
         wandb_init(args.name, wandb_config)
         
     for epoch in range(args.start_epoch, args.epochs):
