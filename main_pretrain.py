@@ -93,7 +93,7 @@ def main(args: PreTrainArgumentParser):
 
     
     if args.distributed:
-        model = DistributedDataParallel(model, device_ids=[args.gpu], find_unused_parameters=True)
+        model = DistributedDataParallel(model, device_ids=[args.gpu])
         model_without_ddp = model.module
     
     # following timm: set wd as 0 for bias and norm layers

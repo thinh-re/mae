@@ -43,6 +43,7 @@ class PreTrainArgumentParser(Tap):
     dist_on_itp: Optional[bool] = False
     dist_url: Optional[str] = 'env://' # Url used to set up distributed training
     distributed: Optional[bool] = False
+    gpu: int = -1
 
 def get_args_parser():
     parser = argparse.ArgumentParser('MAE pre-training', add_help=False)
