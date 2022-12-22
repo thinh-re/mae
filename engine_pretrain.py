@@ -5,7 +5,6 @@ from typing import Iterable, Optional
 import torch
 import wandb
 from torch import Tensor
-from torch.utils.tensorboard import SummaryWriter
 
 import util.lr_sched as lr_sched
 import util.misc as misc
