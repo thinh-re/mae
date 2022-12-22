@@ -37,7 +37,7 @@ class PreTrainArgumentParser(Tap):
     # Distributed training parameters
     world_size: Optional[int] = 1 # Number of distributed processes
     local_rank: Optional[int] = -1
-    rank: Optional[int]
+    rank: Optional[int] = -1
     dist_on_itp: Optional[bool] = False
     dist_url: Optional[str] = 'env://' # Url used to set up distributed training
     distributed: Optional[bool] = False

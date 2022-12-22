@@ -19,12 +19,13 @@ from typing import Optional
 
 import torch
 import torch.distributed as dist
-from argparsers import PreTrainArgumentParser
 from torch import Tensor, nn
 from torch._six import inf
 from torch.distributed import barrier, init_process_group
 from torch.nn.parallel import DistributedDataParallel
 from torch.optim.optimizer import Optimizer
+
+from .argparsers import PreTrainArgumentParser
 
 
 class SmoothedValue(object):

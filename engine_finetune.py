@@ -14,19 +14,20 @@ import sys
 from typing import Iterable, Optional
 
 import torch
-
 from timm.data import Mixup
 from timm.utils import accuracy
 
-import util.misc as misc
 import util.lr_sched as lr_sched
+import util.misc as misc
 
 
-def train_one_epoch(model: torch.nn.Module, criterion: torch.nn.Module,
-                    data_loader: Iterable, optimizer: torch.optim.Optimizer,
-                    device: torch.device, epoch: int, loss_scaler, max_norm: float = 0,
-                    mixup_fn: Optional[Mixup] = None, log_writer=None,
-                    args=None):
+def train_one_epoch(
+    model: torch.nn.Module, criterion: torch.nn.Module,
+    data_loader: Iterable, optimizer: torch.optim.Optimizer,
+    device: torch.device, epoch: int, loss_scaler, max_norm: float = 0,
+    mixup_fn: Optional[Mixup] = None, log_writer=None,
+    args=None,
+):
     model.train(True)
     metric_logger = misc.MetricLogger(delimiter="  ")
     metric_logger.add_meter('lr', misc.SmoothedValue(window_size=1, fmt='{value:.6f}'))

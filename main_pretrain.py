@@ -21,15 +21,15 @@ import torchvision.datasets as datasets
 import torchvision.transforms as transforms
 from torch import nn
 from torch.nn.parallel import DistributedDataParallel
-from torch.utils.data import DataLoader, DistributedSampler, RandomSampler
+from torch.utils.data import DataLoader, DistributedSampler
 from torch.utils.tensorboard import SummaryWriter
-from util.misc import is_main_process
 
 import models_mae
 import util.misc as misc
 from engine_pretrain import train_one_epoch
 from util.argparsers import PreTrainArgumentParser
 from util.misc import NativeScalerWithGradNormCount as NativeScaler
+from wandb_manager import wandb_init, wandb_login
 
 
 def main(args: PreTrainArgumentParser):
@@ -101,11 +101,15 @@ def main(args: PreTrainArgumentParser):
     optimizer = torch.optim.AdamW(param_groups, lr=args.lr, betas=(0.9, 0.95))
     loss_scaler = NativeScaler()
 
-    misc.load_model(args=args, model_without_ddp=model_without_ddp, optimizer=optimizer, loss_scaler=loss_scaler)
+    misc.load_model(
+        args=args, model_without_ddp=model_without_ddp, 
+        optimizer=optimizer, loss_scaler=loss_scaler,
+    )
 
     if global_rank == 0:
-        print("base lr: %.2e" % (args.lr * 256 / eff_batch_size))
-        print("actual lr: %.2e" % args.lr)
+        base_lr = args.lr * 256 / eff_batch_size
+        print(f"base lr: {base_lr:.2f}")
+        print(f"actual lr: {args.lr:.2f}")
 
         print("accumulate grad iterations: %d" % args.accum_iter)
         print("effective batch size: %d" % eff_batch_size)
@@ -115,6 +119,12 @@ def main(args: PreTrainArgumentParser):
         print(f"Start training for {args.epochs} epochs")
 
         start_time = time.time()
+        
+        wandb_login()
+        wandb_config = args.__dict__
+        wandb_config['base_lr'] = base_lr
+        wandb_init('test', wandb_config)
+        
     for epoch in range(args.start_epoch, args.epochs):
         if args.distributed:
             sampler_train: DistributedSampler = data_loader_train.sampler

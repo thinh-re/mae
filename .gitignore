@@ -1,3 +1,6 @@
 pretrained_weights/*
 env
 __pycache__/
+data
+wandb
+output_dir

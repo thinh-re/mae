@@ -1,6 +1,19 @@
 ## Pre-training MAE
 
 To pre-train ViT-Large (recommended default) with **multi-node distributed training**, run the following on 8 nodes with 8 GPUs each:
+
+```
+torchrun --nnodes=1 --nproc_per_node=1 main_pretrain.py \
+    --batch_size 10 \
+    --model mae_vit_base_patch16 \
+    --norm_pix_loss True \
+    --mask_ratio 0.75 \
+    --epochs 800 \
+    --warmup_epochs 40 \
+    --blr 1.5e-4 --weight_decay 0.05 \
+    --data_path ./data
+```
+
 ```
 python submitit_pretrain.py \
     --job_dir ${JOB_DIR} \
