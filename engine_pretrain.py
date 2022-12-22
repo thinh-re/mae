@@ -3,11 +3,11 @@ import sys
 from typing import Iterable, Optional
 
 import torch
-import wandb
 from torch import Tensor
 
 import util.lr_sched as lr_sched
 import util.misc as misc
+import wandb
 from util.argparsers import PreTrainArgumentParser
 from util.misc import NativeScalerWithGradNormCount as NativeScaler
 
