@@ -3,14 +3,15 @@ import sys
 from typing import Iterable, Optional
 
 import torch
+import wandb
 from torch import Tensor
-
 from torch.utils.tensorboard import SummaryWriter
-import util.misc as misc
-import util.lr_sched as lr_sched
 
+import util.lr_sched as lr_sched
+import util.misc as misc
 from util.argparsers import PreTrainArgumentParser
 from util.misc import NativeScalerWithGradNormCount as NativeScaler
+
 
 def train_one_epoch(
     global_rank: int,
@@ -75,8 +76,10 @@ def train_one_epoch(
             This calibrates different curves when batch size changes.
             """
             epoch_1000x = int((data_iter_step / len(data_loader) + epoch) * 1000)
-            log_writer.add_scalar('train_loss', loss_value_reduce, epoch_1000x)
-            log_writer.add_scalar('lr', lr, epoch_1000x)
+            wandb.log({
+                'train_loss': loss_value_reduce,
+                'lr': lr,
+            }, step=epoch_1000x)
 
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
