@@ -4,6 +4,8 @@ from typing import Optional
 from tap import Tap
 
 class PreTrainArgumentParser(Tap):
+    name: str # Experiment name
+    
     batch_size: Optional[int] = 64 # Batch size per GPU (effective batch size is batch_size * accum_iter * # gpus
     epochs: Optional[int] = 400 
     accum_iter: Optional[int] = 1 # Accumulate gradient iterations, (for increasing the effective batch size under memory constraints)
