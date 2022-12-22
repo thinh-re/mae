@@ -30,7 +30,7 @@ class PreTrainArgumentParser(Tap):
     resume: Optional[str] = '' # resume from checkpoint
     
     start_epoch: Optional[int] = 0 
-    num_workers: Optional[int] = 10
+    num_workers: Optional[int] = 2
     pin_mem: Optional[bool] = True # Pin CPU memory in DataLoader for more efficient (sometimes) transfer to GPU.
     no_pin_mem: Optional[bool] = False
     
